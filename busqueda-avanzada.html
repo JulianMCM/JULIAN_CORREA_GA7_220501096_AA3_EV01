@@ -36,10 +36,22 @@
           <a class="nav-link" href="#"><i class="fa-solid fa-gamepad"></i> Categorías</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#"><i class="fa-solid fa-newspaper"></i> Noticias</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#"><i class="fa-solid fa-user"></i> Perfil</a>
+  <a class="nav-link position-relative" href="carrito.html">
+    <i class="fa-solid fa-cart-shopping"></i> Carrito
+    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      0
+    </span>
+  </a>
+</li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="perfil.html" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-user"></i> Perfil
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="perfil.html">Ver Perfil</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" id="logout-btn">Cerrar Sesión</a></li>
+          </ul>
         </li>
       </ul>
     </div>
@@ -131,9 +143,13 @@
         <div class="mb-4 p-3 border rounded">
           <h6 class="fw-bold mb-2">Filtrar por Etiqueta</h6>
 
+          <div><input type="checkbox" name="etiqueta" value="Acción"> Acción</div>
+          <div><input type="checkbox" name="etiqueta" value="FPS"> FPS</div>
+          <div><input type="checkbox" name="etiqueta" value="RPG"> RPG</div>
+          <div><input type="checkbox" name="etiqueta" value="Aventura"> Aventura</div>
+          <div><input type="checkbox" name="etiqueta" value="Puzzle"> Puzzle</div>
           <div><input type="checkbox" name="etiqueta" value="indie"> Indie</div>
           <div><input type="checkbox" name="etiqueta" value="casual"> Casual</div>
-          <div><input type="checkbox" name="etiqueta" value="accion"> Acción</div>
         </div>
 
         <!-- ===== FILTROS POR SISTEMA OPERATIVO ===== -->
@@ -208,5 +224,57 @@
   </div>
 </div>
 
+<script>
+  // Logout functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = 'backend/logout.php';
+      });
+    }
+
+    // Dropdown hover functionality
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) {
+      const dropdownMenu = profileDropdown.nextElementSibling;
+      
+      profileDropdown.addEventListener('mouseenter', function() {
+        dropdownMenu.classList.add('show');
+      });
+      
+      profileDropdown.addEventListener('mouseleave', function() {
+        setTimeout(() => {
+          if (!dropdownMenu.matches(':hover')) {
+            dropdownMenu.classList.remove('show');
+          }
+        }, 100);
+      });
+      
+      dropdownMenu.addEventListener('mouseleave', function() {
+        dropdownMenu.classList.remove('show');
+      });
+    }
+  });
+</script>
+<script>
+function actualizarContadorCarrito() {
+  const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  const contador = document.getElementById("cart-count");
+
+  if (contador) {
+    contador.textContent = carrito.length;
+
+    if (carrito.length === 0) {
+      contador.style.display = "none";
+    } else {
+      contador.style.display = "inline-block";
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", actualizarContadorCarrito);
+</script>
 </body>
 </html>

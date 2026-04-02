@@ -1,49 +1,17 @@
-// filtros.js — VERSIÓN MEJORADA Y OPTIMIZADA
-//--------------------------------------------
+// filtros.js — Gestión de filtros y tabla de videojuegos con datos desde backend
+// Carga datos vía AJAX con query params para filtros server-side
 
-// Datos de ejemplo (pueden venir de una API en el futuro)
-const juegos = [
-  {
-    nombre: "Hollow Knight",
-    fecha: "2017-02-24",
-    valoraciones: 94,
-    precio: 15,
-    idioma: ["español", "ingles"],
-    etiqueta: ["indie", "accion"],
-    so: ["windows", "linux", "macos"]
-  },
-  {
-    nombre: "Stardew Valley",
-    fecha: "2016-02-26",
-    valoraciones: 92,
-    precio: 10,
-    idioma: ["español", "ingles", "portugues"],
-    etiqueta: ["casual", "indie"],
-    so: ["windows", "linux", "macos"]
-  },
-  {
-    nombre: "Counter Strike 2",
-    fecha: "2023-09-27",
-    valoraciones: 88,
-    precio: 0,
-    idioma: ["español", "ingles", "portugues"],
-    etiqueta: ["accion"],
-    so: ["windows"]
-  }
-];
+// Variables globales
+let juegos = []; // Array de juegos cargados desde backend
 
 // Elementos del DOM
 const tablaBody = document.getElementById("tablaResultados");
 const busquedaInput = document.getElementById("buscarJuego");
-
 const precioMin = document.getElementById("precioMin");
 const precioMax = document.getElementById("precioMax");
-
 const minValorSpan = document.getElementById("minValor");
 const maxValorSpan = document.getElementById("maxValor");
-
 const ordenSelect = document.getElementById("ordenar");
-
 const filtrosIdioma = document.querySelectorAll("input[name='idioma']");
 const filtrosEtiqueta = document.querySelectorAll("input[name='etiqueta']");
 const filtrosSO = document.querySelectorAll("input[name='so']");
@@ -63,97 +31,109 @@ function mostrarTabla(lista) {
     return;
   }
 
+  // IMPORTANTE: Ahora 'valoraciones' son datos reales de la BD (ValoracionPromedio)
+  // Los triggers en la tabla Reseña calculan automáticamente el promedio
+  // El backend ordena correctamente por valoraciones reales
   tablaBody.innerHTML = lista.map(j => `
-  <tr class="fila-juego" data-juego='${JSON.stringify(j)}'>
-    <td class="text-primary text-decoration-underline" style="cursor:pointer">${j.nombre}</td>
-    <td>${j.fecha}</td>
-    <td>${j.valoraciones}</td>
-    <td>$${j.precio}</td>
-  </tr>
-`).join("");
+    <tr class="fila-juego" data-juego='${JSON.stringify(j)}'>
+      <td class="text-primary text-decoration-underline" style="cursor:pointer">${j.nombre}</td>
+      <td>${j.fecha}</td>
+      <td>${j.valoraciones}</td>
+      <td>$${j.precio}</td>
+    </tr>
+  `).join("");
 
-// Agregar eventos a cada fila
-document.querySelectorAll(".fila-juego").forEach(fila => {
-  fila.addEventListener("click", () => {
-    const data = JSON.parse(fila.getAttribute("data-juego"));
-
-    // Guardar en localStorage
-    localStorage.setItem("juegoSeleccionado", JSON.stringify(data));
-
-    // Redirigir
-    window.location.href = "detalle-videojuego.html";
+  // Agregar eventos de clic a cada fila para redirigir a detalle
+  document.querySelectorAll(".fila-juego").forEach(fila => {
+    fila.addEventListener("click", () => {
+      const data = JSON.parse(fila.getAttribute("data-juego"));
+      console.log(data);
+      // Guardar en localStorage para página de detalle
+      localStorage.setItem("juegoSeleccionado", JSON.stringify({
+  id: data.id || data.IdVideojuego, // 🔥 FIX CLAVE
+  nombre: data.nombre,
+  precio: data.precio,
+  valoraciones: data.valoraciones,
+  etiqueta: data.genero ? [data.genero] : []
+}));
+      window.location.href = "detalle-videojuego.html";
+    });
   });
-});
-
 }
 
-// Obtener valores seleccionados de un grupo de checkboxes
+// ---------------------------------------------------------------------
+// APLICACIÓN DE FILTROS (ahora envía a backend)
+// ---------------------------------------------------------------------
+function aplicarFiltros() {
+  // Construir query params para enviar al backend
+  const params = new URLSearchParams();
+
+  // Búsqueda por texto
+  const texto = busquedaInput.value.trim();
+  if (texto.length >= 1) {
+    params.append('busqueda', texto);
+  }
+
+  // Rango de precio
+  const minPrecio = parseInt(precioMin.value);
+  const maxPrecio = parseInt(precioMax.value);
+  params.append('minPrecio', minPrecio);
+  params.append('maxPrecio', maxPrecio);
+
+  // Filtros checkbox (solo si están seleccionados)
+  const idiomas = obtenerSeleccionados(filtrosIdioma);
+  if (idiomas.length) {
+    params.append('idioma', idiomas.join(','));
+  }
+
+  const etiquetas = obtenerSeleccionados(filtrosEtiqueta);
+  if (etiquetas.length) {
+    params.append('genero', etiquetas.join(','));
+  }
+
+  const sistemas = obtenerSeleccionados(filtrosSO);
+  if (sistemas.length) {
+    params.append('so', sistemas.join(','));
+  }
+
+  // Orden
+  params.append('orden', ordenSelect.value);
+
+  // Fetch con query params
+  // Las valoraciones ahora vienen reales de la DB (escala 0-100 desde tabla Reseña)
+  fetch(`backend/videos.php?${params.toString()}`)
+    .then(response => response.json())
+    .then(data => {
+      juegos = filtrarJuegosComprados(data); // Filtrar juegos comprados
+      mostrarTabla(juegos);
+    })
+    .catch(err => {
+      console.error('Error cargando juegos filtrados:', err);
+      tablaBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Error al cargar datos.</td></tr>';
+    });
+}
+
+// ---------------------------------------------------------------------
+// FUNCIONES AUXILIARES
+// ---------------------------------------------------------------------
+
+// Obtener valores seleccionados de checkboxes
 const obtenerSeleccionados = (nodelist) =>
   [...nodelist].filter(x => x.checked).map(x => x.value);
 
-// ---------------------------------------------------------------------
-// APLICACIÓN DE FILTROS
-// ---------------------------------------------------------------------
-function aplicarFiltros() {
-  let resultados = [...juegos];
-
-  // --- Filtro por texto ---
-  const texto = busquedaInput.value.toLowerCase();
-  if (texto.length >= 1) {
-    resultados = resultados.filter(j =>
-      j.nombre.toLowerCase().includes(texto)
-    );
-  }
-
-  // --- Filtro por precio ---
-  const precioMinimo = parseInt(precioMin.value);
-  const precioMaximo = parseInt(precioMax.value);
-
-  resultados = resultados.filter(j =>
-    j.precio >= precioMinimo && j.precio <= precioMaximo
-  );
-
-  // --- Filtros checkbox ---
-  const idiomas = obtenerSeleccionados(filtrosIdioma);
-  const etiquetas = obtenerSeleccionados(filtrosEtiqueta);
-  const sistemas = obtenerSeleccionados(filtrosSO);
-
-  if (idiomas.length)
-    resultados = resultados.filter(j =>
-      idiomas.some(i => j.idioma.includes(i))
-    );
-
-  if (etiquetas.length)
-    resultados = resultados.filter(j =>
-      etiquetas.some(t => j.etiqueta.includes(t))
-    );
-
-  if (sistemas.length)
-    resultados = resultados.filter(j =>
-      sistemas.some(s => j.so.includes(s))
-    );
-
-  // --- Ordenar ---
-  switch (ordenSelect.value) {
-    case "precio":
-      resultados.sort((a, b) => a.precio - b.precio);
-      break;
-    case "fecha":
-      resultados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-      break;
-    case "valoraciones":
-      resultados.sort((a, b) => b.valoraciones - a.valoraciones);
-      break;
-    default: // nombre
-      resultados.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  }
-
-  mostrarTabla(resultados);
+// Obtener lista de juegos comprados desde localStorage
+function obtenerJuegosComprados() {
+  const comprados = localStorage.getItem('juegosComprados');
+  return comprados ? JSON.parse(comprados) : [];
 }
 
-// ---------------------------------------------------------------------
-// Ajustar visual de rango de precio
-// ---------------------------------------------------------------------
+// Filtrar juegos comprados
+function filtrarJuegosComprados(juegos) {
+  const comprados = obtenerJuegosComprados();
+  return juegos.filter(juego => !comprados.includes(juego.id));
+}
+
+// Actualizar spans de precio visual
 function actualizarSpansPrecio() {
   minValorSpan.textContent = `$${precioMin.value}`;
   maxValorSpan.textContent = `$${precioMax.value}`;
@@ -163,31 +143,38 @@ function actualizarSpansPrecio() {
 // EVENTOS DINÁMICOS
 // ---------------------------------------------------------------------
 
-// Tener mejores rendimiento: small debounce al buscar
+// Debounce para búsqueda (evita llamadas excesivas)
 let debounceTimer;
 busquedaInput.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(aplicarFiltros, 200);
 });
 
+// Eventos para sliders de precio
 precioMin.addEventListener("input", () => {
   actualizarSpansPrecio();
   aplicarFiltros();
 });
-
 precioMax.addEventListener("input", () => {
   actualizarSpansPrecio();
   aplicarFiltros();
 });
 
+// Evento para select de orden
 ordenSelect.addEventListener("change", aplicarFiltros);
 
+// Eventos para checkboxes de filtros
 [filtrosIdioma, filtrosEtiqueta, filtrosSO].forEach(grupo =>
   grupo.forEach(chk =>
     chk.addEventListener("change", aplicarFiltros)
   )
 );
 
-// Mostrar al cargar
+// ---------------------------------------------------------------------
+// INICIALIZACIÓN
+// ---------------------------------------------------------------------
+
+// Al cargar la página, inicializar y cargar datos
 actualizarSpansPrecio();
-aplicarFiltros();
+aplicarFiltros(); // Primera carga sin filtros
+
