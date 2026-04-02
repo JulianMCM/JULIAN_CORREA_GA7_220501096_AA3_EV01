@@ -27,8 +27,24 @@
       <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
         <ul class="navbar-nav">
           <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-gamepad"></i> Categorías</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-newspaper"></i> Noticias</a></li>
-          <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-user"></i> Perfil</a></li>
+          <li class="nav-item">
+  <a class="nav-link position-relative" href="carrito.html">
+    <i class="fa-solid fa-cart-shopping"></i> Carrito
+    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      0
+    </span>
+  </a>
+</li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="perfil.html" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-solid fa-user"></i> Perfil
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+              <li><a class="dropdown-item" href="perfil.html">Ver Perfil</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logout-btn">Cerrar Sesión</a></li>
+            </ul>
+          </li>
         </ul>
       </div>
     </div>
@@ -99,12 +115,21 @@
           <span class="price-tag">$29.99 USD</span>
 
           <div class="d-flex gap-2">
-            <button class="btn btn-success"><i class="fa-solid fa-cart-shopping"></i> Añadir al carrito</button>
-            <button class="btn btn-primary"><i class="fa-solid fa-credit-card"></i> Comprar ahora</button>
+            <button class="btn btn-success" id="agregarCarritoBtn">
+  <i class="fa-solid fa-cart-shopping"></i> Añadir al carrito
+</button>
+            <button class="btn btn-primary" id="comprarAhoraBtn"><i class="fa-solid fa-credit-card"></i> Comprar ahora</button>
           </div>
         </div>
       </div>
 
+    </div>
+
+    <!-- Botón de navegación -->
+    <div class="d-flex justify-content-start mt-4">
+      <a href="busqueda-avanzada.html" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Volver a Búsqueda
+      </a>
     </div>
 
   </main>
@@ -157,37 +182,198 @@
   <script src="js/accesibilidad.js"></script>
 
   <script>
+    // Función para cambiar la imagen principal al hacer clic en miniaturas
     function changeImage(src) {
       document.getElementById("mainImage").src = src;
     }
   </script>
 <script>
+  // Script para cargar detalles del juego seleccionado desde localStorage
+  // Las valoraciones ahora son ValoracionPromedio real de la DB (escala 0-100)
+  // Se calcula automáticamente mediante triggers cuando hay cambios en Reseña
   document.addEventListener("DOMContentLoaded", () => {
+    // Obtener datos del juego guardado en localStorage
     const data = localStorage.getItem("juegoSeleccionado");
-    if (!data) return;
+    if (!data) return; // Si no hay datos, salir
 
     const juego = JSON.parse(data);
 
-    // Colocar la información en el HTML
+    // Actualizar título del juego
     document.querySelector("h2.fw-bold").textContent = juego.nombre;
 
+    // Actualizar precio
     document.querySelector(".price-tag").textContent = `$${juego.precio} USD`;
 
-    // Descripción generada (si no tienes una fija)
+    // Generar descripción dinámica con valoraciones reales
     document.querySelector("main p").textContent =
-      `${juego.nombre} es un videojuego con muy buenas reseñas, alcanzando ${juego.valoraciones}% de valoraciones positivas.`;
+      `${juego.nombre} es un videojuego con muy buenas reseñas, alcanzando ${juego.valoraciones.toFixed(2)}% de valoraciones.`;
 
-    // Etiquetas dinámicas
+    // Actualizar etiquetas dinámicas (géneros)
     const etiquetasContainer = document.querySelector(".col-md-6 .mt-3");
     etiquetasContainer.innerHTML = juego.etiqueta
       .map(e => `<span class="badge bg-primary me-1">${e}</span>`)
       .join("");
 
-    // Mini-imágenes (si no tienes imágenes reales, usamos placeholders)
+    // Imagen principal (placeholder por ahora)
     document.getElementById("mainImage").src = "assests/img/sample1.jpg";
-
   });
+  
 </script>
 
+<script>
+  // Logout functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = 'backend/logout.php';
+      });
+    }
+      
+    // Dropdown hover functionality
+    const profileDropdown = document.getElementById('profileDropdown');
+    if (profileDropdown) {
+      const dropdownMenu = profileDropdown.nextElementSibling;
+      
+      profileDropdown.addEventListener('mouseenter', function() {
+        dropdownMenu.classList.add('show');
+      });
+      
+      profileDropdown.addEventListener('mouseleave', function() {
+        setTimeout(() => {
+          if (!dropdownMenu.matches(':hover')) {
+            dropdownMenu.classList.remove('show');
+          }
+        }, 100);
+      });
+      
+      dropdownMenu.addEventListener('mouseleave', function() {
+        dropdownMenu.classList.remove('show');
+      });
+    }
+
+    // Comprar ahora functionality
+    const comprarAhoraBtn = document.getElementById('comprarAhoraBtn');
+    // Obtener juego desde localStorage
+const juegoData = localStorage.getItem('juegoSeleccionado');
+
+if (juegoData) {
+  const juego = JSON.parse(juegoData);
+
+  // 🔥 VALIDACIÓN DE BIBLIOTECA (AQUÍ VA)
+  fetch('backend/verificar-biblioteca.php?idVideojuego=' + juego.id)
+    .then(res => res.json())
+    .then(data => {
+      if (data.enBiblioteca) {
+        const btn = document.getElementById('comprarAhoraBtn');
+        btn.textContent = "Ya en biblioteca";
+        btn.classList.remove("btn-primary");
+        btn.classList.add("btn-secondary");
+        btn.disabled = true;
+      }
+    });
+}
+
+if (comprarAhoraBtn) {
+  comprarAhoraBtn.addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    const juegoData = localStorage.getItem('juegoSeleccionado');
+
+    if (!juegoData) {
+      alert('Error: No se encontraron datos del juego.');
+      return;
+    }
+
+    const juego = JSON.parse(juegoData);
+    console.log("JUEGO:", juego);
+
+    try {
+      const response = await fetch('backend/comprar.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idVideojuego: juego.id,
+          precio: juego.precio
+        })
+      });
+
+      const text = await response.text();
+console.log("RESPUESTA:", text);
+
+const data = JSON.parse(text);
+
+      if (data.status === "success") {
+        alert('¡Compra exitosa!');
+        window.location.href = 'busqueda-avanzada.html';
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert('Error en el servidor');
+    }
+  });
+}
+    // ==========================
+// CARRITO (localStorage)
+// ==========================
+
+function obtenerCarrito() {
+  return JSON.parse(localStorage.getItem("carrito")) || [];
+}
+
+function guardarCarrito(carrito) {
+  localStorage.setItem("carrito", JSON.stringify(carrito));
+}
+
+const btnCarrito = document.getElementById("agregarCarritoBtn");
+
+if (btnCarrito) {
+  const juego = JSON.parse(localStorage.getItem("juegoSeleccionado"));
+
+  btnCarrito.addEventListener("click", async () => {
+    const res = await fetch("backend/agregar-carrito.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        idVideojuego: juego.id
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.status === "success") {
+      btnCarrito.textContent = "Ya en el carrito";
+      btnCarrito.disabled = true;
+    }
+  });
+}
+  });
+</script>
+<script>
+function actualizarContadorCarrito() {
+  const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  const contador = document.getElementById("cart-count");
+
+  if (contador) {
+    contador.textContent = carrito.length;
+
+    if (carrito.length === 0) {
+      contador.style.display = "none";
+    } else {
+      contador.style.display = "inline-block";
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", actualizarContadorCarrito);
+</script>
 </body>
 </html>
