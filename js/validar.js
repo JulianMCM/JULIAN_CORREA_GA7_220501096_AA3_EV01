@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("loginForm");
 
-  form.addEventListener("submit", (e) => {
-    e.preventDefault(); // evita el envío automático
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
@@ -12,18 +12,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Por favor, ingrese un correo electrónico válido.");
-      return;
-    }
+    try {
+      const response = await fetch("backend/login.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email, password })
+      });
 
-    if (password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
+      const data = await response.json();
 
-    alert("Inicio de sesión exitoso (simulado)");
-    form.reset();
+      if (data.status === "success") {
+        window.location.href = "busqueda-avanzada.html";
+      } else {
+        alert("Correo o contraseña incorrectos");
+      }
+
+    } catch (error) {
+      alert("Error en el servidor");
+    }
   });
 });
