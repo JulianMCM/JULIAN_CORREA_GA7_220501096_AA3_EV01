@@ -1,50 +1,74 @@
-// register.js
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("registerForm");
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const nombres = document.getElementById("nombres").value.trim();
-    const apellidos = document.getElementById("apellidos").value.trim();
-    const cedula = document.getElementById("cedula").value.trim();
-    const fecha = document.getElementById("fechaNacimiento").value;
+    const nombreUsuario = document.getElementById("nombreUsuario").value.trim();
     const email = document.getElementById("emailReg").value.trim();
     const password = document.getElementById("passwordReg").value.trim();
-    const terminos = document.getElementById("aceptoTerminos").checked;
+    const pais = document.getElementById("pais").value.trim();
+    const acepto = document.getElementById("aceptoTerminos").checked;
 
-    if (!nombres || !apellidos || !cedula || !fecha || !email || !password) {
-      alert("Por favor complete todos los campos.");
+    // =========================
+    // VALIDACIONES 🔥
+    // =========================
+
+    // Campos vacíos
+    if (!nombreUsuario || !email || !password || !pais) {
+      alert("Todos los campos son obligatorios");
       return;
     }
 
-    // email básico
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Por favor ingrese un correo electrónico válido.");
+    // Email válido
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regexEmail.test(email)) {
+      alert("Ingrese un correo válido");
       return;
     }
 
-    // cedula numérica y razonable
-    if (isNaN(cedula) || cedula.length < 6) {
-      alert("Ingrese una cédula válida.");
-      return;
-    }
-
+    // Contraseña mínima
     if (password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres.");
+      alert("La contraseña debe tener mínimo 6 caracteres");
       return;
     }
 
-    if (!terminos) {
-      alert("Debe aceptar los términos y condiciones.");
+    // Nombre usuario mínimo
+    if (nombreUsuario.length < 3) {
+      alert("El nombre de usuario debe tener al menos 3 caracteres");
       return;
     }
 
-    // Simulación de registro exitoso
-    alert("Registro exitoso (simulado). Ya puedes iniciar sesión.");
-    form.reset();
-    // redirigir a login (opcional)
-    window.location.href = "login.html";
+    // Aceptar términos
+    if (!acepto) {
+      alert("Debes aceptar los términos y condiciones");
+      return;
+    }
+
+    // =========================
+    // ENVÍO AL BACKEND
+    // =========================
+    try {
+      const response = await fetch("backend/register.php", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ nombreUsuario, email, password, pais })
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
+        alert("Registro exitoso");
+        window.location.href = "login.html";
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      alert("Error en el servidor");
+      console.error(error);
+    }
   });
 });
