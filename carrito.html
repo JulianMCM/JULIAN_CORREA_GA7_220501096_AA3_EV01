@@ -26,8 +26,24 @@
     <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
       <ul class="navbar-nav">
         <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-gamepad"></i> Categorías</a></li>
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-newspaper"></i> Noticias</a></li>
-        <li class="nav-item"><a class="nav-link" href="#"><i class="fa-solid fa-user"></i> Perfil</a></li>
+        <li class="nav-item">
+  <a class="nav-link position-relative" href="carrito.html">
+    <i class="fa-solid fa-cart-shopping"></i> Carrito
+    <span id="cart-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+      0
+    </span>
+  </a>
+</li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="perfil.html" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="fa-solid fa-user"></i> Perfil
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" href="perfil.html">Ver Perfil</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="#" id="logout-btn">Cerrar Sesión</a></li>
+          </ul>
+        </li>
       </ul>
     </div>
   </div>
@@ -71,7 +87,7 @@
         <!-- BOTONES INFERIORES -->
         <div class="mt-4 d-flex gap-3 flex-wrap">
           <a href="busqueda-avanzada.html" class="btn btn-secondary">Seguir Comprando</a>
-          <button class="btn btn-danger">Eliminar Todos los Artículos</button>
+          <button class="btn btn-danger" onclick="vaciarCarrito()">Eliminar Todos los Artículos</button>
         </div>
       </div>
 
@@ -93,10 +109,19 @@
             <span>Total</span>
             <strong>$219.000</strong>
           </div>
-          <button class="btn btn-primary w-100 mt-4">Continuar con el Pago</button>
+          <button class="btn btn-primary w-100 mt-4" id="btn-pagar">
+  Continuar con el Pago
+</button>
         </div>
       </div>
 
+    </div>
+
+    <!-- Botón de navegación -->
+    <div class="d-flex justify-content-start mt-4">
+      <a href="busqueda-avanzada.html" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Volver a Búsqueda
+      </a>
     </div>
 
   </div>
@@ -151,5 +176,177 @@
 
 <script src="js/accesibilidad.js"></script>
 
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Logout functionality
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      window.location.href = 'backend/logout.php';
+    });
+  }
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+
+  const contenedor = document.getElementById("cart-items");
+  const resumen = document.querySelector(".summary-box");
+
+  // =========================
+  // CARGAR CARRITO
+  // =========================
+  async function cargarCarrito() {
+    const res = await fetch("backend/obtener-carrito.php");
+    const carrito = await res.json();
+
+    renderCarrito(carrito);
+    actualizarResumen(carrito);
+  }
+
+  // =========================
+  // RENDER ITEMS
+  // =========================
+  function renderCarrito(carrito) {
+
+    if (carrito.length === 0) {
+      contenedor.innerHTML = `
+        <div class="text-center text-muted py-5">
+          <h5>Tu carrito está vacío</h5>
+        </div>
+      `;
+      return;
+    }
+
+    contenedor.innerHTML = carrito.map(j => `
+      <div class="cart-item d-flex align-items-center p-3 mb-3 rounded shadow-sm">
+        <img src="assests/img/sample1.jpg" class="cart-img me-3">
+        <div class="flex-grow-1">
+          <h5>${j.nombre}</h5>
+          <button class="btn btn-danger btn-sm" onclick="eliminar(${j.IdVideojuego})">
+            <i class="fa-solid fa-trash"></i> Eliminar
+          </button>
+        </div>
+        <h5>$${parseFloat(j.Precio).toFixed(2)}</h5>
+      </div>
+    `).join("");
+  }
+
+  // =========================
+  // ACTUALIZAR RESUMEN
+  // =========================
+  function actualizarResumen(carrito) {
+
+    if (carrito.length === 0) {
+      resumen.innerHTML = `
+        <h4>Resumen</h4>
+        <hr>
+        <p class="text-muted text-center">Sin productos</p>
+      `;
+      return;
+    }
+
+    const subtotal = carrito.reduce((acc, j) => acc + parseFloat(j.Precio), 0);
+    const impuestos = subtotal * 0.05;
+    const total = subtotal + impuestos;
+
+    resumen.innerHTML = `
+      <h4>Resumen</h4>
+      <hr>
+      <div class="d-flex justify-content-between">
+        <span>Subtotal</span>
+        <strong>$${subtotal.toFixed(2)}</strong>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span>Impuestos (5%)</span>
+        <strong>$${impuestos.toFixed(2)}</strong>
+      </div>
+      <hr>
+      <div class="d-flex justify-content-between fs-5">
+        <span>Total</span>
+        <strong>$${total.toFixed(2)}</strong>
+      </div>
+      <button class="btn btn-primary w-100 mt-4" id="btn-pagar">
+  Continuar con el Pago
+</button>
+    `;
+    // 🔥 REASIGNAR EVENTO
+const btnPagar = document.getElementById("btn-pagar");
+
+if (btnPagar) {
+  btnPagar.addEventListener("click", async () => {
+
+    if (!confirm("¿Deseas confirmar la compra de todos los juegos?")) return;
+
+    try {
+      const res = await fetch("backend/comprar-carrito.php");
+      const data = await res.json();
+
+      if (data.status === "success") {
+        alert("✅ Compra realizada con éxito");
+
+        localStorage.removeItem("carrito");
+        window.location.href = "perfil.html";
+      } else {
+        alert(data.message);
+      }
+
+    } catch (error) {
+      console.error(error);
+      alert("Error en la compra");
+    }
+
+  });
+}
+  }
+
+  // =========================
+  // ELIMINAR ITEM
+  // =========================
+  window.eliminar = async function(id) {
+    await fetch("backend/eliminar-carrito.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ idVideojuego: id })
+    });
+
+    cargarCarrito(); // 🔥 vuelve a renderizar TODO
+  }
+// =========================
+// VACIAR CARRITO 🔥
+// =========================
+window.vaciarCarrito = async function() {
+  await fetch("backend/vaciar-carrito.php");
+  cargarCarrito(); // mejor que reload 👈
+}
+  // =========================
+  // INICIO
+  // =========================
+  cargarCarrito();
+
+});
+</script>
+<script>
+function actualizarContadorCarrito() {
+  const carrito = JSON.parse(localStorage.getItem("carrito")) || [];
+  const contador = document.getElementById("cart-count");
+
+  if (contador) {
+    contador.textContent = carrito.length;
+
+    if (carrito.length === 0) {
+      contador.style.display = "none";
+    } else {
+      contador.style.display = "inline-block";
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", actualizarContadorCarrito);
+</script>
 </body>
 </html>
