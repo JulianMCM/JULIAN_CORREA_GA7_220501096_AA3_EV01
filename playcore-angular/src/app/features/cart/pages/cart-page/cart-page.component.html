@@ -1,0 +1,62 @@
+<section class="container cart-page">
+  <div class="cart-box shadow-lg p-4 rounded-4">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <h1 class="mb-4">Tu carrito</h1>
+
+        @if (loading()) {
+          <div class="text-center py-5">Cargando carrito...</div>
+        } @else if (!items().length) {
+          <div class="text-center text-muted py-5">Tu carrito está vacío.</div>
+        } @else {
+          @for (item of items(); track item.IdVideojuego) {
+            <div class="cart-item d-flex align-items-center p-3 mb-3 rounded shadow-sm">
+              <img src="assests/img/sample1.jpg" class="cart-img me-3" [alt]="item.nombre">
+              <div class="flex-grow-1">
+                <h5 class="mb-1">{{ item.nombre }}</h5>
+                <button class="btn btn-sm btn-danger" type="button" (click)="remove(item.IdVideojuego)">
+                  <i class="fa-solid fa-trash"></i> Eliminar
+                </button>
+              </div>
+              <h5 class="text-end price-tag mb-0 ms-3">${{ item.Precio | number:'1.2-2' }}</h5>
+            </div>
+          }
+        }
+
+        <div class="mt-4 d-flex gap-3 flex-wrap">
+          <a routerLink="/catalogo" class="btn btn-secondary">Seguir comprando</a>
+          <button class="btn btn-danger" type="button" (click)="clear()" [disabled]="!items().length">Eliminar todos los artículos</button>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="summary-box shadow p-4 rounded-4">
+          <h4>Resumen</h4>
+          <hr>
+          <div class="d-flex justify-content-between">
+            <span>Subtotal</span>
+            <strong>${{ subtotal() | number:'1.2-2' }}</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span>Impuestos (5%)</span>
+            <strong>${{ taxes() | number:'1.2-2' }}</strong>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-between fs-5">
+            <span>Total</span>
+            <strong>${{ total() | number:'1.2-2' }}</strong>
+          </div>
+          <button class="btn btn-primary w-100 mt-4" type="button" (click)="buyAll()" [disabled]="!items().length">
+            Continuar con el pago
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-start mt-4">
+      <a routerLink="/catalogo" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Volver a búsqueda
+      </a>
+    </div>
+  </div>
+</section>

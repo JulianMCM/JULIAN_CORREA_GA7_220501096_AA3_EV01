@@ -1,15 +1,15 @@
 <?php
-session_start();
-include("../config/db.php");
+require_once __DIR__ . '/api-bootstrap.php';
 
-$idUsuario = $_SESSION['id'];
+$idUsuario = requireAuthenticatedUserId();
 
 $sql = "DELETE cv FROM Carrito_Videojuego cv
         INNER JOIN Carrito c ON cv.IdCarrito = c.IdCarrito
         WHERE c.IdUsuario = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $idUsuario);
+$stmt->bind_param('i', $idUsuario);
 $stmt->execute();
+$stmt->close();
 
-echo json_encode(["status" => "success"]);
+apiResponse(['status' => 'success']);

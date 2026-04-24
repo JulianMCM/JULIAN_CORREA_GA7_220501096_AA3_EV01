@@ -1,0 +1,110 @@
+<section class="container-fluid px-3 px-lg-4">
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="glass-panel p-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+          <div>
+            <p class="eyebrow mb-1">Explorar</p>
+            <h1 class="mb-0">Búsqueda avanzada</h1>
+          </div>
+
+          <div class="catalog-order">
+            <label class="form-label fw-bold mb-1">Ordenar por</label>
+            <select class="form-select" [formControl]="filtersForm.controls.orden">
+              <option value="nombre">Nombre del juego</option>
+              <option value="fecha">Fecha de lanzamiento</option>
+              <option value="valoraciones">Valoraciones</option>
+              <option value="precio">Precio</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover align-middle catalog-table">
+            <thead>
+              <tr>
+                <th>Juego</th>
+                <th>Lanzamiento</th>
+                <th>Valoraciones</th>
+                <th>Precio</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (loading) {
+                <tr>
+                  <td colspan="4" class="text-center py-5">Cargando videojuegos...</td>
+                </tr>
+              } @else if (error) {
+                <tr>
+                  <td colspan="4" class="text-center text-danger py-5">{{ error }}</td>
+                </tr>
+              } @else if (!games.length) {
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-5">No se encontraron resultados.</td>
+                </tr>
+              } @else {
+                @for (game of games; track trackByGame($index, game)) {
+                  <tr class="catalog-row" (click)="openDetail(game)">
+                    <td class="fw-semibold text-primary">{{ game.nombre }}</td>
+                    <td>{{ game.fecha | date:'mediumDate' }}</td>
+                    <td>{{ game.valoraciones | number:'1.0-2' }}%</td>
+                    <td>${{ game.precio | number:'1.2-2' }}</td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="glass-panel p-4">
+        <div class="mb-4">
+          <label class="form-label fw-bold">Buscar juego</label>
+          <input class="form-control" type="text" [formControl]="filtersForm.controls.busqueda" placeholder="Ej: Minecraft, GTA V...">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label fw-bold">Filtrar por precio</label>
+          <input class="form-range" type="range" min="0" max="100" [formControl]="filtersForm.controls.minPrecio">
+          <input class="form-range" type="range" min="0" max="100" [formControl]="filtersForm.controls.maxPrecio">
+          <div class="d-flex justify-content-between fw-bold">
+            <span>${{ filtersForm.controls.minPrecio.value }}</span>
+            <span>${{ filtersForm.controls.maxPrecio.value }}</span>
+          </div>
+        </div>
+
+        <div class="filter-group mb-3">
+          <h6 class="fw-bold mb-3">Filtrar por idioma</h6>
+          @for (idioma of idiomas; track idioma) {
+            <label class="form-check d-block mb-2">
+              <input class="form-check-input me-2" type="checkbox" [checked]="filtersForm.controls.idioma.value.includes(idioma)" (change)="updateMultiFilter('idioma', idioma, $any($event.target).checked)">
+              {{ idioma | titlecase }}
+            </label>
+          }
+        </div>
+
+        <div class="filter-group mb-3">
+          <h6 class="fw-bold mb-3">Filtrar por etiqueta</h6>
+          @for (etiqueta of etiquetas; track etiqueta) {
+            <label class="form-check d-block mb-2">
+              <input class="form-check-input me-2" type="checkbox" [checked]="filtersForm.controls.genero.value.includes(etiqueta)" (change)="updateMultiFilter('genero', etiqueta, $any($event.target).checked)">
+              {{ etiqueta }}
+            </label>
+          }
+        </div>
+
+        <div class="filter-group">
+          <h6 class="fw-bold mb-3">Sistema operativo</h6>
+          @for (sistema of sistemas; track sistema) {
+            <label class="form-check d-block mb-2">
+              <input class="form-check-input me-2" type="checkbox" [checked]="filtersForm.controls.so.value.includes(sistema)" (change)="updateMultiFilter('so', sistema, $any($event.target).checked)">
+              {{ sistema | titlecase }}
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

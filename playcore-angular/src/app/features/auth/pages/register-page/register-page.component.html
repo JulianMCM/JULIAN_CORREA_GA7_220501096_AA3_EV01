@@ -1,0 +1,50 @@
+<section class="auth-page container">
+  <div class="row justify-content-end">
+    <div class="col-12 col-lg-6">
+      <div class="auth-card shadow rounded-4 auth-card--wide">
+        <h1 class="mb-4 text-center">Crear cuenta</h1>
+
+        <form [formGroup]="form" (ngSubmit)="submit()">
+          <div class="mb-3">
+            <label class="form-label" for="nombreUsuario">Nombre de usuario</label>
+            <input id="nombreUsuario" type="text" class="form-control" formControlName="nombreUsuario" placeholder="Ej: Juan123">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="emailReg">Correo electrónico</label>
+            <input id="emailReg" type="email" class="form-control" formControlName="email" placeholder="ejemplo@correo.com">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="passwordReg">Contraseña</label>
+            <input id="passwordReg" type="password" class="form-control" formControlName="password" placeholder="Mínimo 6 caracteres">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="pais">País</label>
+            <input id="pais" type="text" class="form-control" formControlName="pais" placeholder="Ej: Colombia">
+          </div>
+
+          <div class="form-check mb-3">
+            <input id="aceptoTerminos" class="form-check-input" type="checkbox" formControlName="acepto">
+            <label class="form-check-label" for="aceptoTerminos">Acepto los términos y condiciones</label>
+          </div>
+
+          @if (message) {
+            <div class="alert py-2" [class.alert-danger]="isError" [class.alert-success]="!isError">
+              {{ message }}
+            </div>
+          }
+
+          <button type="submit" class="btn btn-primary w-100 mb-3" [disabled]="loading">
+            {{ loading ? 'Registrando...' : 'Registrarse' }}
+          </button>
+
+          <div class="text-center">
+            <a routerLink="/login" class="text-decoration-none">¿Ya tienes cuenta? Iniciar sesión</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,86 +1,64 @@
 <?php
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+require_once __DIR__ . '/api-bootstrap.php';
 
-session_start();
-header("Content-Type: application/json");
+$idUsuario = requireAuthenticatedUserId();
+$data = getJsonInput();
+$idVideojuego = isset($data['idVideojuego']) ? (int) $data['idVideojuego'] : (isset($data['id']) ? (int) $data['id'] : 0);
+$precio = isset($data['precio']) ? (float) $data['precio'] : null;
 
-include("../config/db.php");
-
-// 🔐 Verificar sesión
-if (!isset($_SESSION['id'])) {
-    echo json_encode([
-        "status" => "error",
-        "message" => "Usuario no autenticado"
-    ]);
-    exit;
+if ($idVideojuego <= 0 || $precio === null) {
+    apiResponse([
+        'status' => 'error',
+        'message' => 'Datos incompletos.',
+    ], 400);
 }
-
-$data = json_decode(file_get_contents("php://input"), true);
-$idVideojuego = $data['idVideojuego'] ?? null;
-$precio = $data['precio'] ?? null;
-
-if (!$idVideojuego || !$precio) {
-    echo json_encode([
-        "status" => "error",
-        "message" => "Datos incompletos"
-    ]);
-    exit;
-}
-
-$idUsuario = $_SESSION['id'];
-$idVideojuego = $data['idVideojuego'] ?? $data['id'] ?? null;
-$precio = $data['precio'] ?? null;
-
 
 $conn->begin_transaction();
 
 try {
-    // 1. Crear compra
     $stmt = $conn->prepare("INSERT INTO Compra (IdUsuario, MetodoPago, MontoTotal) VALUES (?, 'Tarjeta', ?)");
-    $stmt->bind_param("id", $idUsuario, $precio);
+    $stmt->bind_param('id', $idUsuario, $precio);
     $stmt->execute();
-
     $idCompra = $stmt->insert_id;
+    $stmt->close();
 
-    // 2. Relacionar videojuego
-    $stmt = $conn->prepare("INSERT INTO Compra_Videojuego (IdCompra, IdVideojuego) VALUES (?, ?)");
-    $stmt->bind_param("ii", $idCompra, $idVideojuego);
+    $stmt = $conn->prepare('INSERT INTO Compra_Videojuego (IdCompra, IdVideojuego) VALUES (?, ?)');
+    $stmt->bind_param('ii', $idCompra, $idVideojuego);
     $stmt->execute();
+    $stmt->close();
 
-    // 3. Obtener o crear biblioteca
-    $stmt = $conn->prepare("SELECT IdBiblioteca FROM Biblioteca WHERE IdUsuario = ?");
-    $stmt->bind_param("i", $idUsuario);
+    $stmt = $conn->prepare('SELECT IdBiblioteca FROM Biblioteca WHERE IdUsuario = ?');
+    $stmt->bind_param('i', $idUsuario);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows === 0) {
-        $stmt = $conn->prepare("INSERT INTO Biblioteca (IdUsuario) VALUES (?)");
-        $stmt->bind_param("i", $idUsuario);
+        $stmt->close();
+        $stmt = $conn->prepare('INSERT INTO Biblioteca (IdUsuario) VALUES (?)');
+        $stmt->bind_param('i', $idUsuario);
         $stmt->execute();
         $idBiblioteca = $stmt->insert_id;
     } else {
         $row = $result->fetch_assoc();
-        $idBiblioteca = $row['IdBiblioteca'];
+        $idBiblioteca = (int) $row['IdBiblioteca'];
     }
+    $stmt->close();
 
-    // 4. Insertar en biblioteca
-    $stmt = $conn->prepare("INSERT IGNORE INTO Biblioteca_Videojuego (IdBiblioteca, IdVideojuego) VALUES (?, ?)");
-    $stmt->bind_param("ii", $idBiblioteca, $idVideojuego);
+    $stmt = $conn->prepare('INSERT IGNORE INTO Biblioteca_Videojuego (IdBiblioteca, IdVideojuego) VALUES (?, ?)');
+    $stmt->bind_param('ii', $idBiblioteca, $idVideojuego);
     $stmt->execute();
+    $stmt->close();
 
     $conn->commit();
 
-    echo json_encode([
-        "status" => "success",
-        "message" => "Compra realizada correctamente"
+    apiResponse([
+        'status' => 'success',
+        'message' => 'Compra realizada correctamente.',
     ]);
-
-} catch (Exception $e) {
+} catch (Exception $exception) {
     $conn->rollback();
-
-    echo json_encode([
-        "status" => "error",
-        "message" => $e->getMessage()
-    ]);
+    apiResponse([
+        'status' => 'error',
+        'message' => $exception->getMessage(),
+    ], 500);
 }

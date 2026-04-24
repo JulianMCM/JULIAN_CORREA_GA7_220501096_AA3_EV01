@@ -1,7 +1,13 @@
 <?php
-// backend/logout.php — Cerrar sesión del usuario
-session_start();
+header('Content-Type: application/json; charset=utf-8');
+
+require_once __DIR__ . '/session-bootstrap.php';
+ensureProjectSessionStarted();
+
+$_SESSION = [];
 session_destroy();
-header("Location: ../login.html");
-exit;
-?>
+
+echo json_encode([
+    'status' => 'success',
+    'message' => 'Sesión cerrada correctamente.',
+], JSON_UNESCAPED_UNICODE);

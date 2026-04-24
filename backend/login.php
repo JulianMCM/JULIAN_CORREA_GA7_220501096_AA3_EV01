@@ -1,47 +1,39 @@
 <?php
-session_start();
-include("../config/db.php");
+require_once __DIR__ . '/api-bootstrap.php';
 
-// Agrega esto para debug
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+$data = getJsonInput();
+$email = trim($data['email'] ?? '');
+$password = $data['password'] ?? '';
 
-$data = json_decode(file_get_contents("php://input"), true);
-
-if (!$data) {
-    echo json_encode(["status" => "error", "message" => "No data received"]);
-    exit;
+if ($email === '' || $password === '') {
+    apiResponse([
+        'status' => 'error',
+        'message' => 'Correo y contraseña son obligatorios.',
+    ], 400);
 }
 
-    $email = $conn->real_escape_string($data['email']);
-    $password = $data['password']; // recibimos plaintext, no escapa aquí para password_verify
-
-    $stmt = $conn->prepare("SELECT IdUsuario, NombreUsuario, Contrasena FROM Usuario WHERE Correo = ?");
-    if (!$stmt) {
-        echo json_encode(["status" => "error", "message" => "Prepare failed: " . $conn->error]);
-        exit;
-    }
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-if (!$result) {
-        echo json_encode(["status" => "error", "message" => "Query failed: " . $conn->error]);
-    exit;
-}
-
-if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['Contrasena'])) {
-        $_SESSION['usuario'] = $user['NombreUsuario'];
-        $_SESSION['id'] = $user['IdUsuario'];
-        echo json_encode(["status" => "success"]);
-    } else {
-        echo json_encode(["status" => "error", "message" => "Wrong password"]);
-    }
-} else {
-    echo json_encode(["status" => "error", "message" => "User not found"]);
-}
+$stmt = $conn->prepare('SELECT IdUsuario, NombreUsuario, Contrasena FROM Usuario WHERE Correo = ?');
+$stmt->bind_param('s', $email);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
 $stmt->close();
-$conn->close();
-?>
+
+if (!$user) {
+    apiResponse([
+        'status' => 'error',
+        'message' => 'Usuario no encontrado.',
+    ], 404);
+}
+
+if (!password_verify($password, $user['Contrasena'])) {
+    apiResponse([
+        'status' => 'error',
+        'message' => 'Contraseña incorrecta.',
+    ], 401);
+}
+
+$_SESSION['usuario'] = $user['NombreUsuario'];
+$_SESSION['id'] = (int) $user['IdUsuario'];
+
+apiResponse(['status' => 'success']);

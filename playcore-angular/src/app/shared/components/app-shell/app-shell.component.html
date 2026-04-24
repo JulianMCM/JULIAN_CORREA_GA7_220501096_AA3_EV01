@@ -1,0 +1,97 @@
+<div class="app-shell">
+  <nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" routerLink="/catalogo">
+        <img src="assests/img/logo.png" alt="Logo PLAYCORE" width="40" height="40" class="me-2">
+        <span class="fw-bold">PLAYCORE</span>
+      </a>
+
+      <div class="shell-nav justify-content-end">
+        <ul class="navbar-nav align-items-lg-center flex-row flex-wrap justify-content-end gap-2 gap-lg-0">
+          @if (!isAuthPage()) {
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/catalogo" routerLinkActive="active">
+                <i class="fa-solid fa-gamepad"></i> Catálogo
+              </a>
+            </li>
+          }
+
+          @if (auth.isAuthenticated() && !isAuthPage()) {
+            <li class="nav-item">
+              <a class="nav-link position-relative" routerLink="/carrito" routerLinkActive="active">
+                <i class="fa-solid fa-cart-shopping"></i> Carrito
+                @if (cart.cartCount() > 0) {
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                    {{ cart.cartCount() }}
+                  </span>
+                }
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/perfil" routerLinkActive="active">
+                <i class="fa-solid fa-user"></i> Perfil
+              </a>
+            </li>
+            <li class="nav-item">
+              <button class="btn btn-link nav-link" type="button" (click)="auth.logout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+              </button>
+            </li>
+          } @else {
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/login" routerLinkActive="active">
+                <i class="fa-solid fa-right-to-bracket"></i> Ingresar
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" routerLink="/registro" routerLinkActive="active">
+                <i class="fa-solid fa-user-plus"></i> Registrarse
+              </a>
+            </li>
+          }
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="background"></div>
+
+  <main class="page-content">
+    <router-outlet />
+  </main>
+
+  <footer class="footer py-4">
+    <div class="container d-flex flex-column flex-lg-row justify-content-between gap-4 align-items-lg-center">
+      <div class="social-icons">
+        <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/2111/2111463.png" width="25" alt="Instagram"></a>
+        <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/145/145802.png" width="25" alt="Facebook"></a>
+        <a href="#"><img src="https://cdn-icons-png.flaticon.com/512/733/733579.png" width="25" alt="X"></a>
+      </div>
+
+      <div class="row flex-grow-1">
+        <div class="col-md-4">
+          <h6 class="fw-bold">Sobre nosotros</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="#">Quiénes somos</a></li>
+            <li><a href="#">Historia</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Explora</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="#">Artículos</a></li>
+            <li><a href="#">Proveedores</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4">
+          <h6 class="fw-bold">Recursos</h6>
+          <ul class="list-unstyled mb-0">
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <app-accessibility-widget />
+</div>

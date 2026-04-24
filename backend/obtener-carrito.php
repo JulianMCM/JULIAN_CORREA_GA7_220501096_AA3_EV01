@@ -1,14 +1,7 @@
 <?php
-session_start();
-header("Content-Type: application/json");
-include("../config/db.php");
+require_once __DIR__ . '/api-bootstrap.php';
 
-if (!isset($_SESSION['id'])) {
-  echo json_encode(["status" => "error"]);
-  exit;
-}
-
-$idUsuario = $_SESSION['id'];
+$idUsuario = requireAuthenticatedUserId();
 
 $sql = "SELECT v.IdVideojuego, v.Titulo AS nombre, v.Precio
         FROM Carrito c
@@ -17,13 +10,15 @@ $sql = "SELECT v.IdVideojuego, v.Titulo AS nombre, v.Precio
         WHERE c.IdUsuario = ?";
 
 $stmt = $conn->prepare($sql);
-$stmt->bind_param("i", $idUsuario);
+$stmt->bind_param('i', $idUsuario);
 $stmt->execute();
 $result = $stmt->get_result();
 
 $juegos = [];
 while ($row = $result->fetch_assoc()) {
-  $juegos[] = $row;
+    $juegos[] = $row;
 }
 
-echo json_encode($juegos);
+$stmt->close();
+
+echo json_encode($juegos, JSON_UNESCAPED_UNICODE);

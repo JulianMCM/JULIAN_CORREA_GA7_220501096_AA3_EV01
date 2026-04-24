@@ -1,0 +1,84 @@
+<section class="container">
+  @if (loading()) {
+    <div class="glass-panel p-5 text-center">Cargando detalle del videojuego...</div>
+  } @else if (!game()) {
+    <div class="glass-panel p-5 text-center text-danger">No fue posible encontrar este videojuego.</div>
+  } @else {
+    <div class="game-detail-container">
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <img [src]="selectedImage()" class="game-main-img mb-3" [alt]="game()!.nombre">
+
+          <div class="row g-2 mb-4">
+            @for (image of images; track image) {
+              <div class="col-4">
+                <img [src]="image" class="thumb-img" [class.thumb-img--active]="selectedImage() === image" [alt]="game()!.nombre" (click)="chooseImage(image)">
+              </div>
+            }
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-outline-primary game-action-btn" type="button" disabled>
+              <i class="fa-regular fa-heart"></i> Lista de deseados próximamente
+            </button>
+            <button class="btn btn-outline-success game-action-btn" type="button" disabled>
+              <i class="fa-solid fa-user-plus"></i> Seguir próximamente
+            </button>
+            <button class="btn btn-outline-danger game-action-btn" type="button" disabled>
+              <i class="fa-solid fa-ban"></i> Ignorar próximamente
+            </button>
+          </div>
+        </div>
+
+        <div class="col-lg-6">
+          <p class="eyebrow mb-2">Detalle del videojuego</p>
+          <h1 class="fw-bold">{{ game()!.nombre }}</h1>
+
+          <p class="lead mt-3">
+            {{ game()!.descripcion || (game()!.nombre + ' destaca por su recepción positiva y una valoración promedio de ' + (game()!.valoraciones | number:'1.0-2') + '%.') }}
+          </p>
+
+          <div class="mt-4 d-flex flex-wrap gap-2">
+            @for (tag of genreTags(); track tag) {
+              <span class="badge text-bg-primary px-3 py-2">{{ tag }}</span>
+            }
+          </div>
+
+          <div class="game-meta mt-4">
+            <div><strong>Lanzamiento:</strong> {{ game()!.fecha | date:'mediumDate' }}</div>
+            <div><strong>Valoración:</strong> {{ game()!.valoraciones | number:'1.0-2' }}%</div>
+            <div><strong>Desarrollador:</strong> {{ game()!.desarrollador || 'No disponible' }}</div>
+            <div><strong>País:</strong> {{ game()!.paisDesarrollador || 'No disponible' }}</div>
+          </div>
+
+          @if (inLibrary()) {
+            <div class="alert alert-success mt-4 mb-0">
+              Este videojuego ya hace parte de tu biblioteca.
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="buy-container mt-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+          <span class="price-tag">${{ game()!.precio | number:'1.2-2' }} USD</span>
+
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-success" type="button" (click)="addToCart()" [disabled]="busy() || inLibrary()">
+              <i class="fa-solid fa-cart-shopping"></i> Añadir al carrito
+            </button>
+            <button class="btn btn-primary" type="button" (click)="buyNow()" [disabled]="busy() || inLibrary()">
+              <i class="fa-solid fa-credit-card"></i> Comprar ahora
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-start mt-4">
+      <a routerLink="/catalogo" class="btn btn-outline-primary">
+        <i class="fa-solid fa-arrow-left me-2"></i>Volver a búsqueda
+      </a>
+    </div>
+  }
+</section>

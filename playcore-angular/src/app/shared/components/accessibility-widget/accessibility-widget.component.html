@@ -1,0 +1,20 @@
+<div class="accessibility-menu" (click)="stopPropagation($event)">
+  <button id="accessibility-btn" class="btn btn-secondary" type="button" (click)="accessibility.toggleMenu()">
+    <i class="fa-solid fa-universal-access"></i>
+  </button>
+
+  @if (accessibility.menuOpen()) {
+    <div class="accessibility-options show" id="accessibility-options">
+      <button id="toggle-contrast" class="btn btn-light w-100 mb-2" type="button" (click)="accessibility.toggleContrast()">
+        <i class="fa-solid fa-adjust"></i>
+        {{ accessibility.darkMode() ? 'Modo claro' : 'Contraste' }}
+      </button>
+      <button id="increase-font" class="btn btn-light w-100 mb-2" type="button" (click)="accessibility.increaseFont()">
+        <i class="fa-solid fa-font"></i> A+
+      </button>
+      <button id="decrease-font" class="btn btn-light w-100" type="button" (click)="accessibility.decreaseFont()">
+        <i class="fa-solid fa-font"></i> A-
+      </button>
+    </div>
+  }
+</div>
