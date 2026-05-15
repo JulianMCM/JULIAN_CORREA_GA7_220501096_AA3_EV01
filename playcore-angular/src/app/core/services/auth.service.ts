@@ -17,7 +17,7 @@ export class AuthService {
   readonly isAuthenticated = computed(() => !!this.username());
 
   checkSession() {
-    return this.http.get(`${this.apiBase}/session.php`, { withCredentials: true, responseType: 'text' }).pipe(
+    return this.http.get(`${this.apiBase}/session`, { withCredentials: true, responseType: 'text' }).pipe(
       map((response) => parseApiJson<SessionResponse>(response)),
       tap((response) => {
         this.username.set(response.status === 'ok' ? response.usuario ?? null : null);
@@ -33,7 +33,7 @@ export class AuthService {
 
   login(payload: LoginPayload) {
     return this.http
-      .post(`${this.apiBase}/login.php`, payload, { withCredentials: true, responseType: 'text' })
+      .post(`${this.apiBase}/auth/login`, payload, { withCredentials: true, responseType: 'text' })
       .pipe(
         map((response) => parseApiJson<ApiStatusResponse>(response)),
         tap((response) => {
@@ -46,13 +46,13 @@ export class AuthService {
 
   register(payload: RegisterPayload) {
     return this.http
-      .post(`${this.apiBase}/register.php`, payload, { withCredentials: true, responseType: 'text' })
+      .post(`${this.apiBase}/auth/register`, payload, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)));
   }
 
   logout() {
     this.http
-      .get(`${this.apiBase}/logout.php`, { withCredentials: true, responseType: 'text' })
+      .get(`${this.apiBase}/auth/logout`, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)))
       .subscribe({
         next: () => {

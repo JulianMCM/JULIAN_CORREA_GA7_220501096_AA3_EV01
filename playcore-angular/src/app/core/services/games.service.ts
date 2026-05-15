@@ -40,7 +40,7 @@ export class GamesService {
     }
 
     return this.http
-      .get(`${this.apiBase}/videos.php`, {
+      .get(`${this.apiBase}/games`, {
         params,
         withCredentials: true,
         responseType: 'text'
@@ -56,14 +56,13 @@ export class GamesService {
 
   buyNow(idVideojuego: number, precio: number) {
     return this.http
-      .post(`${this.apiBase}/comprar.php`, { idVideojuego, precio }, { withCredentials: true, responseType: 'text' })
+      .post(`${this.apiBase}/games/${idVideojuego}/purchase`, { precio }, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)));
   }
 
   verifyLibrary(idVideojuego: number) {
     return this.http
-      .get(`${this.apiBase}/verificar-biblioteca.php`, {
-        params: { idVideojuego },
+      .get(`${this.apiBase}/games/${idVideojuego}/library-status`, {
         withCredentials: true,
         responseType: 'text'
       })

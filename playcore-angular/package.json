@@ -5,8 +5,8 @@
     "ng": "ng",
     "start": "ng serve",
     "start:dev": "ng serve --proxy-config proxy.conf.json",
-    "start:api": "php -S 127.0.0.1:8000 -t ..",
-    "start:api:wamp": ".\\start-backend-wamp.bat",
+    "start:api": "npm --prefix ../express-api run dev",
+    "start:api:prod": "npm --prefix ../express-api start",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

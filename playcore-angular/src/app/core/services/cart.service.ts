@@ -14,7 +14,7 @@ export class CartService {
 
   getCart() {
     return this.http
-      .get(`${this.apiBase}/obtener-carrito.php`, { withCredentials: true, responseType: 'text' })
+      .get(`${this.apiBase}/cart`, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => this.normalizeCart(parseApiJson<unknown>(response))));
   }
 
@@ -30,28 +30,32 @@ export class CartService {
 
   addToCart(idVideojuego: number) {
     return this.http
-      .post(`${this.apiBase}/agregar-carrito.php`, { idVideojuego }, { withCredentials: true, responseType: 'text' })
+      .post(`${this.apiBase}/cart/items`, { idVideojuego }, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)))
       .pipe(tap(() => this.refreshCount().subscribe()));
   }
 
   removeFromCart(idVideojuego: number) {
     return this.http
-      .post(`${this.apiBase}/eliminar-carrito.php`, { idVideojuego }, { withCredentials: true, responseType: 'text' })
+      .request('delete', `${this.apiBase}/cart/items`, {
+        body: { idVideojuego },
+        withCredentials: true,
+        responseType: 'text'
+      })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)))
       .pipe(tap(() => this.refreshCount().subscribe()));
   }
 
   clearCart() {
     return this.http
-      .get(`${this.apiBase}/vaciar-carrito.php`, { withCredentials: true, responseType: 'text' })
+      .delete(`${this.apiBase}/cart`, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)))
       .pipe(tap(() => this.cartCount.set(0)));
   }
 
   buyCart() {
     return this.http
-      .get(`${this.apiBase}/comprar-carrito.php`, { withCredentials: true, responseType: 'text' })
+      .post(`${this.apiBase}/cart/purchase`, {}, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => parseApiJson<ApiStatusResponse>(response)))
       .pipe(tap(() => this.cartCount.set(0)));
   }

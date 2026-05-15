@@ -12,7 +12,7 @@ export class ProfileService {
 
   getProfile() {
     return this.http
-      .get(`${this.apiBase}/perfil.php`, { withCredentials: true, responseType: 'text' })
+      .get(`${this.apiBase}/profile`, { withCredentials: true, responseType: 'text' })
       .pipe(map((response) => this.normalizeProfile(parseApiJson<unknown>(response))));
   }
 
