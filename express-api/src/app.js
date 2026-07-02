@@ -1,15 +1,19 @@
 const cors = require('cors');
 const express = require('express');
 const session = require('express-session');
-const { sessionSecret } = require('./config/env');
+const { frontendOrigins, isProduction, sessionSecret } = require('./config/env');
 const routes = require('./routes');
 const { errorHandler, notFound } = require('./middleware/error-handler');
 
 const app = express();
 
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 // Permite que Angular consuma la API conservando cookies de sesion.
 app.use(cors({
-  origin: ['http://localhost:4200', 'http://127.0.0.1:4200'],
+  origin: frontendOrigins,
   credentials: true
 }));
 
@@ -22,7 +26,8 @@ app.use(session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: 'lax'
+    sameSite: isProduction ? 'none' : 'lax',
+    secure: isProduction
   }
 }));
 

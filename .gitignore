@@ -1,3 +1,4 @@
 config/db.local.php
 express-api/.env
 express-api/node_modules/
+~$*.docx
